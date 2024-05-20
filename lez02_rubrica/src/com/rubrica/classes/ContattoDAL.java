@@ -2,9 +2,12 @@ package com.rubrica.classes;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import com.mysql.cj.x.protobuf.MysqlxPrepare.Prepare;
 
 public class ContattoDAL {
 
@@ -21,7 +24,7 @@ public class ContattoDAL {
 		this.ds.setAllowPublicKeyRetrieval(true);
 	}
 	
-	public boolean Insert(Contatto con) throws SQLException{
+	public boolean insert(Contatto con) throws SQLException{
 		Connection conn = this.ds.getConnection();
 		boolean risultato = false;
 		
@@ -40,9 +43,93 @@ public class ContattoDAL {
 		return risultato;
 	}
 	
-	//TODO: Delete
-	//TODO: Update
-	//TODO: Ricerca tutti
-	//TODO: Ricerca puntuale
+	public boolean delete(int idDaElim) throws SQLException{
+		boolean risultato = false;
+		Connection conn = this.ds.getConnection();
+		
+		String query = "DELETE FROM Contatto WHERE contattoID = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setInt(1, idDaElim);
+		
+		int righeCoinvolte = ps.executeUpdate();
+		if(righeCoinvolte > 0)
+			risultato = true;
+		
+		conn.close();
+		return risultato;
+	}
+	
+	public ArrayList<Contatto> findAll() throws SQLException{
+		ArrayList<Contatto> risultato = new ArrayList<Contatto>();			//[]
+		Connection conn = this.ds.getConnection();
+		
+		String query = "SELECT contattoID, nome, cognome, mail, telefono FROM Contatto";
+		PreparedStatement ps = conn.prepareStatement(query);
+				
+		ResultSet rs = ps.executeQuery();
+		
+		while(rs.next()) {
+			Contatto temp = new Contatto();
+			temp.setId( rs.getInt("contattoID") );
+			temp.setNome( rs.getString("nome") );
+			temp.setCogn( rs.getString("cognome") );
+			temp.setMail( rs.getString("mail") );
+			temp.setTele( rs.getString("telefono") );
+			
+			risultato.add(temp);
+		}
+		
+		conn.close();
+		return risultato;
+	}
+	
+	public Contatto findById(int idDaCercare) throws SQLException{
+		Contatto risultato = null;
+		Connection conn = this.ds.getConnection();
+		
+		String query = "SELECT contattoID, nome, cognome, mail, telefono FROM Contatto WHERE contattoID = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setInt(1, idDaCercare);
+		
+		ResultSet rs = ps.executeQuery();
+		
+		if(rs.next()) {
+			risultato = new Contatto();
+			risultato.setId( rs.getInt("contattoID") );
+			risultato.setNome( rs.getString("nome") );
+			risultato.setCogn( rs.getString("cognome") );
+			risultato.setMail( rs.getString("mail") );
+			risultato.setTele( rs.getString("telefono") );
+		}		
+		
+		conn.close();
+		return risultato;
+	}
+
+	public boolean update(Contatto obj)  throws SQLException{
+		boolean risultato = false;
+		Connection conn = this.ds.getConnection();
+		
+		String query = "UPDATE Contatto SET "
+				+ "nome = ?, "
+				+ "cognome = ?, "
+				+ "mail = ?, "
+				+ "telefono = ? "
+				+ "WHERE contattoID = ?";
+		PreparedStatement ps = conn.prepareStatement(query);
+		ps.setString(1, obj.getNome() );
+		ps.setString(2, obj.getCogn() );
+		ps.setString(3, obj.getMail() );
+		ps.setString(4, obj.getTele() );
+		ps.setInt(5, obj.getId() );
+		
+		int righeCoinvolte = ps.executeUpdate();
+		
+		if(righeCoinvolte > 0)
+			risultato = true;	
+		
+		conn.close();
+		return risultato;
+	}
 	
 }
